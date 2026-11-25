@@ -23,7 +23,7 @@ const formatBRL = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
 const FILTER_OPTIONS: { value: FilterOption; label: string }[] = [
-  { value: 'all', label: 'Todas' },
+  { value: 'all', label: 'Todos' },
   { value: 'ahead', label: 'Adiantado' },
   { value: 'on_track', label: 'Em dia' },
   { value: 'behind', label: 'Atrasado' },
