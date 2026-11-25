@@ -1,33 +1,80 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { PiggyBank } from '@/types/piggy'
+import { calculatePlanningMetrics, PaceStatus } from '@/utils/piggy-helpers'
 import { PiggyCard } from './PiggyCard'
 import { CreatePiggyModal } from './CreatePiggyModal'
 import { TransactionModal } from './TransactionModal'
 import { EditPiggyModal } from './EditPiggyModal'
-import { LogOut, Plus, Wallet } from 'lucide-react'
+import { ArrowUpDown, LogOut, Plus, Wallet } from 'lucide-react'
 
 interface DashboardClientProps {
   initialPiggies: PiggyBank[]
   userEmail: string
 }
 
+type FilterOption = 'all' | PaceStatus
+type SortOption = 'newest' | 'deadline' | 'remaining' | 'progress'
+
 const formatBRL = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
+
+const FILTER_OPTIONS: { value: FilterOption; label: string }[] = [
+  { value: 'all', label: 'Todas' },
+  { value: 'ahead', label: 'Adiantado' },
+  { value: 'on_track', label: 'No ritmo' },
+  { value: 'behind', label: 'Atrasado' },
+  { value: 'completed', label: 'Concluídas' },
+]
 
 export function DashboardClient({ initialPiggies, userEmail }: DashboardClientProps) {
   const [piggies, setPiggies] = useState<PiggyBank[]>(initialPiggies)
   const [isCreateOpen, setIsCreateOpen] = useState(false)
   const [selectedPiggy, setSelectedPiggy] = useState<PiggyBank | null>(null)
   const [editingPiggy, setEditingPiggy] = useState<PiggyBank | null>(null)
+  const [statusFilter, setStatusFilter] = useState<FilterOption>('all')
+  const [sortBy, setSortBy] = useState<SortOption>('newest')
   const router = useRouter()
   const supabase = createClient()
 
   const totalSaved = piggies.reduce((acc, p) => acc + Number(p.current_amount), 0)
   const totalTarget = piggies.reduce((acc, p) => acc + Number(p.target_amount), 0)
+
+  const filteredAndSortedPiggies = useMemo(() => {
+    const withMetrics = piggies.map((piggy) => ({
+      piggy,
+      metrics: calculatePlanningMetrics(
+        Number(piggy.current_amount),
+        Number(piggy.target_amount),
+        piggy.deadline,
+        piggy.created_at
+      ),
+    }))
+
+    const filtered =
+      statusFilter === 'all'
+        ? withMetrics
+        : withMetrics.filter((item) => item.metrics.paceStatus === statusFilter)
+
+    const sorted = [...filtered].sort((a, b) => {
+      switch (sortBy) {
+        case 'deadline':
+          return a.metrics.daysLeft - b.metrics.daysLeft
+        case 'remaining':
+          return b.metrics.remainingAmount - a.metrics.remainingAmount
+        case 'progress':
+          return b.metrics.progress - a.metrics.progress
+        case 'newest':
+        default:
+          return new Date(b.piggy.created_at).getTime() - new Date(a.piggy.created_at).getTime()
+      }
+    })
+
+    return sorted.map((item) => item.piggy)
+  }, [piggies, statusFilter, sortBy])
 
   async function handleLogout() {
     await supabase.auth.signOut()
@@ -84,6 +131,41 @@ export function DashboardClient({ initialPiggies, userEmail }: DashboardClientPr
           </div>
         </section>
 
+        {/* Barra de Filtros e Ordenação */}
+        {piggies.length > 0 && (
+          <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex flex-wrap items-center gap-1.5">
+              {FILTER_OPTIONS.map((option) => (
+                <button
+                  key={option.value}
+                  onClick={() => setStatusFilter(option.value)}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
+                    statusFilter === option.value
+                      ? 'border-emerald-400/40 bg-emerald-400/15 text-emerald-300'
+                      : 'border-white/10 bg-white/[0.03] text-zinc-400 hover:bg-white/[0.07] hover:text-zinc-200'
+                  }`}
+                >
+                  {option.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="flex items-center gap-2 self-start sm:self-auto">
+              <ArrowUpDown className="h-3.5 w-3.5 text-zinc-500" />
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="rounded-xl border border-white/10 bg-[#0c0c10] px-3 py-1.5 text-xs text-zinc-300 outline-none focus:border-emerald-400/50"
+              >
+                <option value="newest">Mais recentes</option>
+                <option value="deadline">Prazo mais próximo</option>
+                <option value="remaining">Maior valor faltante</option>
+                <option value="progress">Maior progresso</option>
+              </select>
+            </div>
+          </div>
+        )}
+
         {/* Grid de Cofrinhos */}
         {piggies.length === 0 ? (
           <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 py-16 text-center">
@@ -95,9 +177,19 @@ export function DashboardClient({ initialPiggies, userEmail }: DashboardClientPr
               Criar minha primeira meta
             </button>
           </div>
+        ) : filteredAndSortedPiggies.length === 0 ? (
+          <div className="flex flex-col items-center justify-center rounded-3xl border border-dashed border-white/10 py-12 text-center">
+            <p className="text-sm text-zinc-400">Nenhuma meta encontrada com esse filtro.</p>
+            <button
+              onClick={() => setStatusFilter('all')}
+              className="mt-3 text-xs font-medium text-emerald-400 hover:underline"
+            >
+              Mostrar todas as metas
+            </button>
+          </div>
         ) : (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {piggies.map((piggy) => (
+            {filteredAndSortedPiggies.map((piggy) => (
               <PiggyCard
                 key={piggy.id}
                 piggy={piggy}

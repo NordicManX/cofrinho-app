@@ -3,8 +3,9 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PiggyBank, Transaction } from '@/types/piggy'
-import { ArrowDownLeft, ArrowUpRight, Loader2, SlidersHorizontal, Trash2, X } from 'lucide-react'
+import { ArrowDownLeft, ArrowUpRight, LineChart, Loader2, SlidersHorizontal, Trash2, X } from 'lucide-react'
 import { WhatIfSimulator } from './WhatIfSimulator'
+import { EvolutionChart } from './EvolutionChart'
 import { format, parseISO } from 'date-fns'
 import { ptBR } from 'date-fns/locale'
 import { CurrencyInput } from '@/components/ui/CurrencyInput'
@@ -19,7 +20,7 @@ const formatBRL = (value: number) =>
   new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(value)
 
 export function TransactionModal({ piggy, onClose, onBalanceUpdated }: TransactionModalProps) {
-  const [activeTab, setActiveTab] = useState<'transactions' | 'simulator'>('transactions')
+  const [activeTab, setActiveTab] = useState<'transactions' | 'evolution' | 'simulator'>('transactions')
   const [type, setType] = useState<'deposit' | 'withdraw'>('deposit')
   const [amount, setAmount] = useState<number>(0)
   const [note, setNote] = useState('')
@@ -45,7 +46,7 @@ export function TransactionModal({ piggy, onClose, onBalanceUpdated }: Transacti
       .select('*')
       .eq('piggy_bank_id', piggyId)
       .order('created_at', { ascending: false })
-      .limit(10)
+      .limit(50)
 
     setHistory((data as Transaction[]) ?? [])
     setLoadingHistory(false)
@@ -129,7 +130,7 @@ export function TransactionModal({ piggy, onClose, onBalanceUpdated }: Transacti
           </button>
         </div>
 
-        {/* Abas: Movimentações vs Simulador */}
+        {/* Abas */}
         <div className="mb-5 flex gap-4 border-b border-white/10">
           <button
             type="button"
@@ -141,6 +142,18 @@ export function TransactionModal({ piggy, onClose, onBalanceUpdated }: Transacti
             }`}
           >
             Movimentações
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('evolution')}
+            className={`flex items-center gap-1.5 pb-2.5 text-xs font-semibold transition ${
+              activeTab === 'evolution'
+                ? 'border-b-2 border-emerald-400 text-white'
+                : 'text-zinc-500 hover:text-zinc-300'
+            }`}
+          >
+            <LineChart className="h-3.5 w-3.5" />
+            Evolução
           </button>
           <button
             type="button"
@@ -158,6 +171,8 @@ export function TransactionModal({ piggy, onClose, onBalanceUpdated }: Transacti
 
         {activeTab === 'simulator' ? (
           <WhatIfSimulator piggy={piggy} />
+        ) : activeTab === 'evolution' ? (
+          <EvolutionChart transactions={history} targetAmount={Number(piggy.target_amount)} />
         ) : (
           <>
             {/* Toggle Aporte / Resgate */}
