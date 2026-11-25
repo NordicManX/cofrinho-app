@@ -1,10 +1,11 @@
+import { Suspense } from 'react'
 import { connection } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardClient } from '@/components/piggy/DashboardClient'
 import { PiggyBank } from '@/types/piggy'
 import { redirect } from 'next/navigation'
 
-export default async function HomePage() {
+async function DashboardContent() {
   await connection()
 
   const supabase = await createClient()
@@ -24,5 +25,21 @@ export default async function HomePage() {
       initialPiggies={(piggies as PiggyBank[]) ?? []}
       userEmail={user.email ?? ''}
     />
+  )
+}
+
+function DashboardFallback() {
+  return (
+    <div className="flex min-h-screen items-center justify-center bg-[#050507] text-sm text-zinc-400">
+      Carregando seus cofrinhos...
+    </div>
+  )
+}
+
+export default function HomePage() {
+  return (
+    <Suspense fallback={<DashboardFallback />}>
+      <DashboardContent />
+    </Suspense>
   )
 }
