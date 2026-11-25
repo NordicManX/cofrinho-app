@@ -1,9 +1,12 @@
+import { connection } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { DashboardClient } from '@/components/piggy/DashboardClient'
 import { PiggyBank } from '@/types/piggy'
 import { redirect } from 'next/navigation'
 
 export default async function HomePage() {
+  await connection()
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 

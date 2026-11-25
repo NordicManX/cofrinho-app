@@ -36,14 +36,12 @@ export function PiggyCard({ piggy, onQuickDeposit, onEdit }: PiggyCardProps) {
       animate={{ opacity: 1, y: 0 }}
       className="group relative overflow-hidden rounded-3xl border border-white/10 bg-white/[0.03] p-6 shadow-[inset_0_1px_0_0_rgba(255,255,255,0.08)] backdrop-blur-xl transition hover:border-white/20"
     >
-      {/* Mesh Gradient Generativo no fundo */}
       <div
         className="pointer-events-none absolute inset-0 opacity-60 transition duration-500 group-hover:opacity-90"
         style={{ background: gradient.background }}
       />
 
       <div className="relative z-10 flex flex-col justify-between gap-5">
-        {/* Cabeçalho */}
         <div className="flex items-start justify-between gap-3">
           <div>
             <div className="flex flex-wrap items-center gap-2">
@@ -71,7 +69,6 @@ export function PiggyCard({ piggy, onQuickDeposit, onEdit }: PiggyCardProps) {
           </div>
         </div>
 
-        {/* Valores */}
         <div>
           <div className="flex items-baseline justify-between">
             <span className="text-2xl font-bold tracking-tight text-white tabular-nums">
@@ -82,7 +79,6 @@ export function PiggyCard({ piggy, onQuickDeposit, onEdit }: PiggyCardProps) {
             </span>
           </div>
 
-          {/* Barra de Progresso */}
           <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/10">
             <motion.div
               initial={{ width: 0 }}
@@ -104,7 +100,6 @@ export function PiggyCard({ piggy, onQuickDeposit, onEdit }: PiggyCardProps) {
           </div>
         </div>
 
-        {/* Ação Rápida */}
         <button
           onClick={() => onQuickDeposit(piggy)}
           className="flex w-full items-center justify-center gap-2 rounded-xl border border-white/10 bg-white/[0.06] py-2.5 text-xs font-semibold text-white transition hover:bg-white/[0.12]"
