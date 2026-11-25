@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PiggyBank } from '@/types/piggy'
 import { Loader2, Trash2, X } from 'lucide-react'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 
 interface EditPiggyModalProps {
   piggy: PiggyBank | null
@@ -15,7 +16,7 @@ interface EditPiggyModalProps {
 export function EditPiggyModal({ piggy, onClose, onUpdated, onDeleted }: EditPiggyModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [targetAmount, setTargetAmount] = useState('')
+  const [targetAmount, setTargetAmount] = useState<number>(0)
   const [deadline, setDeadline] = useState('')
   const [loading, setLoading] = useState(false)
   const [deleting, setDeleting] = useState(false)
@@ -27,7 +28,7 @@ export function EditPiggyModal({ piggy, onClose, onUpdated, onDeleted }: EditPig
     if (!piggy) return
     setTitle(piggy.title)
     setDescription(piggy.description ?? '')
-    setTargetAmount(String(piggy.target_amount))
+    setTargetAmount(Number(piggy.target_amount))
     setDeadline(piggy.deadline)
     setConfirmDelete(false)
     setError(null)
@@ -38,6 +39,11 @@ export function EditPiggyModal({ piggy, onClose, onUpdated, onDeleted }: EditPig
   async function handleUpdate(e: React.FormEvent) {
     e.preventDefault()
     if (!piggy) return
+    if (targetAmount <= 0) {
+      setError('Informe um valor alvo maior que zero.')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -46,7 +52,7 @@ export function EditPiggyModal({ piggy, onClose, onUpdated, onDeleted }: EditPig
       .update({
         title: title.trim(),
         description: description.trim() || null,
-        target_amount: parseFloat(targetAmount),
+        target_amount: targetAmount,
         deadline,
       })
       .eq('id', piggy.id)
@@ -96,6 +102,7 @@ export function EditPiggyModal({ piggy, onClose, onUpdated, onDeleted }: EditPig
     setDeleting(false)
     onClose()
   }
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm">
       <div className="relative w-full max-w-md rounded-3xl border border-white/10 bg-[#0c0c10] p-6 shadow-2xl">
@@ -129,14 +136,10 @@ export function EditPiggyModal({ piggy, onClose, onUpdated, onDeleted }: EditPig
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs text-zinc-400">Valor alvo (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="1"
+              <CurrencyInput
                 required
                 value={targetAmount}
-                onChange={(e) => setTargetAmount(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white outline-none focus:border-emerald-400/50 tabular-nums"
+                onChange={setTargetAmount}
               />
             </div>
 

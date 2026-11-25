@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { PiggyBank } from '@/types/piggy'
 import { Loader2, X } from 'lucide-react'
+import { CurrencyInput } from '@/components/ui/CurrencyInput'
 
 interface CreatePiggyModalProps {
   open: boolean
@@ -14,7 +15,7 @@ interface CreatePiggyModalProps {
 export function CreatePiggyModal({ open, onClose, onCreated }: CreatePiggyModalProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
-  const [targetAmount, setTargetAmount] = useState('')
+  const [targetAmount, setTargetAmount] = useState<number>(0)
   const [deadline, setDeadline] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -24,6 +25,11 @@ export function CreatePiggyModal({ open, onClose, onCreated }: CreatePiggyModalP
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
+    if (targetAmount <= 0) {
+      setError('Informe um valor alvo maior que zero.')
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -34,9 +40,9 @@ export function CreatePiggyModal({ open, onClose, onCreated }: CreatePiggyModalP
       .from('piggy_banks')
       .insert({
         user_id: user.id,
-        title,
-        description: description || null,
-        target_amount: parseFloat(targetAmount),
+        title: title.trim(),
+        description: description.trim() || null,
+        target_amount: targetAmount,
         deadline,
       })
       .select()
@@ -51,7 +57,7 @@ export function CreatePiggyModal({ open, onClose, onCreated }: CreatePiggyModalP
     onCreated(data as PiggyBank)
     setTitle('')
     setDescription('')
-    setTargetAmount('')
+    setTargetAmount(0)
     setDeadline('')
     setLoading(false)
     onClose()
@@ -92,15 +98,11 @@ export function CreatePiggyModal({ open, onClose, onCreated }: CreatePiggyModalP
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs text-zinc-400">Valor alvo (R$)</label>
-              <input
-                type="number"
-                step="0.01"
-                min="1"
+              <CurrencyInput
                 required
-                placeholder="5000.00"
+                placeholder="R$ 5.000,00"
                 value={targetAmount}
-                onChange={(e) => setTargetAmount(e.target.value)}
-                className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-3.5 py-2.5 text-sm text-white outline-none focus:border-emerald-400/50"
+                onChange={setTargetAmount}
               />
             </div>
 
