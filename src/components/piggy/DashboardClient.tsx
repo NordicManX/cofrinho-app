@@ -25,7 +25,7 @@ const formatBRL = (value: number) =>
 const FILTER_OPTIONS: { value: FilterOption; label: string }[] = [
   { value: 'all', label: 'Todas' },
   { value: 'ahead', label: 'Adiantado' },
-  { value: 'on_track', label: 'No ritmo' },
+  { value: 'on_track', label: 'Em dia' },
   { value: 'behind', label: 'Atrasado' },
   { value: 'completed', label: 'Concluídas' },
 ]
