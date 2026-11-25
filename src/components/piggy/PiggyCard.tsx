@@ -24,7 +24,7 @@ export function PiggyCard({ piggy, onQuickDeposit, onEdit }: PiggyCardProps) {
   const gradient = generateMeshGradient(piggy.id + piggy.title)
 
   const paceBadge = {
-    completed: { label: 'Concluída', style: 'border-emerald-400/30 bg-emerald-400/15 text-emerald-300' },
+    completed: { label: 'Concluídos', style: 'border-emerald-400/30 bg-emerald-400/15 text-emerald-300' },
     ahead: { label: 'Adiantado', style: 'border-cyan-400/30 bg-cyan-400/15 text-cyan-300' },
     on_track: { label: 'Em dia', style: 'border-white/10 bg-white/5 text-zinc-300' },
     behind: { label: 'Atrasado', style: 'border-amber-400/30 bg-amber-400/15 text-amber-300' },

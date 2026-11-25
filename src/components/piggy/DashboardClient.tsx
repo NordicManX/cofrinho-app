@@ -27,7 +27,7 @@ const FILTER_OPTIONS: { value: FilterOption; label: string }[] = [
   { value: 'ahead', label: 'Adiantado' },
   { value: 'on_track', label: 'Em dia' },
   { value: 'behind', label: 'Atrasado' },
-  { value: 'completed', label: 'Concluídas' },
+  { value: 'completed', label: 'Concluídos' },
 ]
 
 export function DashboardClient({ initialPiggies, userEmail }: DashboardClientProps) {
